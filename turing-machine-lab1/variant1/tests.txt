@@ -1,0 +1,3 @@
+aababb -> bbbb
+aaaa -> 
+bbbab -> bbbb
