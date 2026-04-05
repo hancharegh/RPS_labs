@@ -1,6 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
-from tkinter import simpledialog
+from tkinter import messagebox, simpledialog
 import random
 
 from auth import login, register
@@ -9,14 +8,16 @@ from array_service import save_array, get_arrays
 
 
 class App:
-    def __init__(self, root):
+    def __init__(self, root):  # <-- исправлено с init на __init__
         self.root = root
         self.root.title("Lab 3 App")
         self.user_id = None
         self.array = []
+        self.sorted_array = []
 
         self.login_screen()
 
+    # ------------------ ЭКРАН ЛОГИНА ------------------
     def login_screen(self):
         self.clear()
 
@@ -31,6 +32,7 @@ class App:
         tk.Button(self.root, text="Войти", command=self.do_login).pack()
         tk.Button(self.root, text="Регистрация", command=self.do_register).pack()
 
+    # ------------------ ГЛАВНЫЙ ЭКРАН ------------------
     def main_screen(self):
         self.clear()
 
@@ -39,10 +41,13 @@ class App:
         tk.Button(self.root, text="Сортировать", command=self.sort).pack()
         tk.Button(self.root, text="Сохранить", command=self.save).pack()
         tk.Button(self.root, text="Показать сохранённые", command=self.show_saved).pack()
+        tk.Button(self.root, text="Справка", command=self.show_help).pack()
+        tk.Button(self.root, text="Выйти", command=self.logout).pack()  # кнопка выхода
 
         self.output = tk.Text(self.root, height=10)
         self.output.pack()
 
+    # ------------------ МЕТОДЫ КНОПОК ------------------
     def do_login(self):
         user = login(self.login_entry.get(), self.pass_entry.get())
         if user:
@@ -58,7 +63,7 @@ class App:
             messagebox.showerror("Ошибка", "Пользователь уже есть")
 
     def manual_input(self):
-        data = self.simple_input("Введите числа через пробел:")
+        data = simpledialog.askstring("Ввод", "Введите числа через пробел:")
         if not data:
             return
         try:
@@ -72,21 +77,50 @@ class App:
         self.output.insert(tk.END, f"\n{self.array}")
 
     def sort(self):
+        if not self.array:
+            messagebox.showwarning("Предупреждение", "Массив пуст")
+            return
         self.sorted_array = shaker_sort(self.array)
         self.output.insert(tk.END, f"\n{self.sorted_array}")
 
     def save(self):
+        if not self.array or not self.sorted_array:
+            messagebox.showwarning("Предупреждение", "Нет данных для сохранения")
+            return
         save_array(self.user_id, self.array, self.sorted_array)
         messagebox.showinfo("OK", "Сохранено")
 
     def show_saved(self):
         data = get_arrays(self.user_id)
+        if not data:
+            messagebox.showinfo("Сохранённые массивы", "Нет сохранённых массивов")
+            return
         for d in data:
             self.output.insert(tk.END, f"\n{d}")
 
-    def simple_input(self, text):
-        return tk.simpledialog.askstring("Ввод", text)
+    def show_help(self):
+        help_text = (
+            "Инструкция по использованию приложения:\n\n"
+            "1. Введите логин и пароль для входа или регистрации.\n"
+            "2. На главном экране вы можете:\n"
+            "   - Ввести массив вручную через пробел.\n"
+            "   - Сгенерировать случайный массив (10 элементов от -100 до 100).\n"
+            "   - Отсортировать массив с помощью сортировки перемешиванием.\n""   - Сохранить массив и отсортированный результат.\n"
+            "   - Просмотреть ранее сохранённые массивы.\n"
+            "3. Для ввода чисел используйте только целые числа, разделённые пробелом.\n"
+            "4. Кнопка 'Выйти' возвращает на экран логина.\n"
+            "5. Справка доступна на этом экране по кнопке 'Справка'."
+        )
+        messagebox.showinfo("Справка", help_text)
 
+    def logout(self):
+        """Возврат на экран логина"""
+        self.user_id = None
+        self.array = []
+        self.sorted_array = []
+        self.login_screen()
+
+    # ------------------ ВСПОМОГАТЕЛЬНЫЕ ------------------
     def clear(self):
         for w in self.root.winfo_children():
             w.destroy()
